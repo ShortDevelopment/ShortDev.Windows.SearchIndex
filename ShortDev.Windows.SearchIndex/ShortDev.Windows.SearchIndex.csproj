@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1-windows</TargetFramework>
+		<LangVersion>9</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<!-- Nuget -->
+	<PropertyGroup>
+		<Version>0.1.0</Version>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Company>ShortDevelopment</Company>
+		<Authors>ShortDevelopment</Authors>
+		<Description>Helper for windows search index (COM based)</Description>
+		<PackageProjectUrl>https://github.com/ShortDevelopment/ShortDev.Windows.SearchIndex</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/ShortDevelopment/ShortDev.Windows.SearchIndex</RepositoryUrl>
+		<PackageTags>windows search-index</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Data.OleDb" Version="6.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="Microsoft.Search.Interop">
+			<HintPath>Microsoft.Search.Interop.dll</HintPath>
+			<EmbedInteropTypes>true</EmbedInteropTypes>
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+</Project>
