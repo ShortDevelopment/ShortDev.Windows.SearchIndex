@@ -1,47 +1,63 @@
 ﻿using Microsoft.Search.Interop;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
+using System.Linq;
 
-namespace ShortDev.Windows.SearchIndex
+namespace ShortDev.Windows.SearchIndex;
+
+public sealed class SearchCatalog
 {
-    public sealed class SearchCatalog
+    public string CatalogId { get; private set; }
+
+    public CSearchManager SearchManager { get; private set; }
+    public CSearchCatalogManager CatalogManager { get; private set; }
+    public CSearchQueryHelper SearchQueryHelper { get; private set; }
+
+    /// <summary>
+    /// See <see cref="SystemIndex"/> for default instance
+    /// </summary>
+    public SearchCatalog(string catalogId)
     {
-        public string CatalogId { get; private set; }
+        this.CatalogId = catalogId;
+        SearchManager = new();
+        CatalogManager = SearchManager.GetCatalog(catalogId);
+        SearchQueryHelper = CatalogManager.GetQueryHelper();
+    }
 
-        public CSearchManager SearchManager { get; private set; }
-        public CSearchCatalogManager CatalogManager { get; private set; }
-        public CSearchQueryHelper SearchQueryHelper { get; private set; }
+    public static SearchCatalog SystemIndex { get => new("SystemIndex"); }
 
-        /// <summary>
-        /// See <see cref="SystemIndex"/> for default instance
-        /// </summary>
-        public SearchCatalog(string catalogId)
+    #region Query
+    public IEnumerable<string> QueryPaths(SearchQueryBuilder queryBuilder)
+    {
+        queryBuilder
+            .ClearColumns()
+            .AddColumn(SearchIndexColumn.ItemPathDisplay);
+        DataTable data = Query(queryBuilder);
+        return data.Rows
+                    .Cast<DataRow>()
+                    .Select((row) => row[0].ToString());
+    }
+
+    public DataTable Query(SearchQueryBuilder queryBuilder)
+        => Query(queryBuilder.Build(this.SearchQueryHelper));
+
+    public DataTable Query(string sqlQuery)
+    {
+        using (OleDbConnection Connection = new(SearchQueryHelper.ConnectionString))
         {
-            this.CatalogId = catalogId;
-            SearchManager = new();
-            CatalogManager = SearchManager.GetCatalog(catalogId);
-            SearchQueryHelper = CatalogManager.GetQueryHelper();
-        }
-
-        public static SearchCatalog SystemIndex { get => new("SystemIndex"); }
-
-        public DataTable Query(SearchQueryBuilder queryBuilder)
-            => Query(queryBuilder.Build(this.SearchQueryHelper));
-
-        public DataTable Query(string sqlQuery)
-        {
-            using (OleDbConnection Connection = new(SearchQueryHelper.ConnectionString))
+            Connection.Open();
+            using (OleDbCommand cmd = new(sqlQuery, Connection)
             {
-                Connection.Open();
-                OleDbCommand cmd = new(sqlQuery, Connection);
-                cmd.CommandType = CommandType.Text;
-                using (var reader = cmd.ExecuteReader())
-                {
-                    DataTable data = new();
-                    data.Load(reader);
-                    return data;
-                }
+                CommandType = CommandType.Text
+            })
+            using (var reader = cmd.ExecuteReader())
+            {
+                DataTable data = new();
+                data.Load(reader);
+                return data;
             }
         }
     }
+    #endregion
 }
